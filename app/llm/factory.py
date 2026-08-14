@@ -9,8 +9,8 @@ def get_llm_provider() -> BaseLLMProvider:
     Create and return the LLM provider based on LLM_PROVIDER env var.
 
     Supported providers:
-    - "gemini": Google Gemini (default)
-    - Add more providers here as needed (e.g., "openai", "anthropic")
+    - "openai": OpenAI-compatible API endpoint (default)
+    - "gemini": backward-compatible alias for the same implementation
 
     Returns:
         An instance of BaseLLMProvider.
@@ -20,13 +20,13 @@ def get_llm_provider() -> BaseLLMProvider:
     """
     provider_name = settings.LLM_PROVIDER.lower()
 
-    if provider_name == "gemini":
-        from app.llm.gemini_provider import GeminiProvider
-        return GeminiProvider()
+    if provider_name in {"openai", "gemini"}:
+        from app.llm.gemini_provider import OpenAIProvider
+        return OpenAIProvider()
     else:
         raise ValueError(
             f"Unsupported LLM provider: '{provider_name}'. "
-            f"Supported providers: gemini. "
+            f"Supported providers: openai, gemini. "
             f"Set LLM_PROVIDER env variable to a supported provider."
         )
 

@@ -1,4 +1,4 @@
-"""Google Gemini LLM provider implementation using google.genai SDK."""
+"""OpenAI-compatible LLM provider implementation for the LiteLLM endpoint."""
 
 import asyncio
 import json
@@ -19,19 +19,23 @@ from app.llm.prompts.templates import (
 logger = logging.getLogger(__name__)
 
 
-class GeminiProvider(BaseLLMProvider):
-    """Google Gemini LLM provider using the new google.genai SDK."""
+class OpenAIProvider(BaseLLMProvider):
+    """OpenAI-compatible provider for LiteLLM / proxy endpoints."""
 
     def __init__(self):
-        if not settings.GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY is required for Gemini provider")
+        api_key = settings.OPENAI_API_KEY or settings.GEMINI_API_KEY
+        base_url = settings.OPENAI_BASE_URL or settings.GEMINI_BASE_URL
+        model = settings.OPENAI_MODEL or settings.GEMINI_MODEL
+
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY is required for the OpenAI-compatible provider")
 
         self.client = openai.OpenAI(
-            api_key=settings.GEMINI_API_KEY,
-            base_url=settings.GEMINI_BASE_URL,
+            api_key=api_key,
+            base_url=base_url,
         )
 
-        self.model = settings.GEMINI_MODEL
+        self.model = model
 
     async def _generate(self, prompt: str) -> str:
         """Generate text from a prompt with retry and exponential backoff."""
@@ -40,22 +44,26 @@ class GeminiProvider(BaseLLMProvider):
 
         for attempt in range(max_retries):
             try:
-                logger.debug(f"[Gemini] Calling LLM (attempt {attempt + 1}/{max_retries})...")
+                logger.debug(f"[OpenAI] Calling LLM (attempt {attempt + 1}/{max_retries})...")
                 response = await asyncio.to_thread(
-                    self.client.models.generate_content,
+                    self.client.chat.completions.create,
                     model=self.model,
-                    contents=prompt,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.2,
                 )
-                logger.debug(f"[Gemini] LLM response received ({len(response.text)} chars)")
-                return response.text.strip()
+                content = response.choices[0].message.content
+                if content is None:
+                    raise ValueError("Empty response from LLM provider")
+                logger.debug(f"[OpenAI] LLM response received ({len(content)} chars)")
+                return content.strip()
             except Exception as e:
                 if attempt == max_retries - 1:
-                    logger.error(f"[Gemini] LLM request failed after {max_retries} attempts: {e}")
+                    logger.error(f"[OpenAI] LLM request failed after {max_retries} attempts: {e}")
                     raise RuntimeError(
                         f"LLM request failed after {max_retries} attempts: {str(e)}"
                     ) from e
                 delay = base_delay * (2 ** attempt)
-                logger.warning(f"[Gemini] Attempt {attempt + 1} failed, retrying in {delay}s...")
+                logger.warning(f"[OpenAI] Attempt {attempt + 1} failed, retrying in {delay}s...")
                 await asyncio.sleep(delay)
 
     async def classify_domain(self, question: str) -> str:

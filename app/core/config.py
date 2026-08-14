@@ -27,11 +27,17 @@ class Settings(BaseSettings):
     METABASE_DATABASE_ID: int = 1
 
     # LLM Provider
-    LLM_PROVIDER: str = "gemini"
+    LLM_PROVIDER: str = "openai"
+
+    # OpenAI-compatible endpoint config (used by LiteLLM / penpencil proxy)
+    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_MODEL: str = "vertex_ai/gemini-2.5-pro"
+    OPENAI_BASE_URL: str = "https://litellm-platform.penpencil.guru"
+
+    # Backward compatibility for older Gemini-oriented env names
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_MODEL: str = "vertex_ai/gemini-2.5-pro"
     GEMINI_BASE_URL: str = "https://litellm-platform.penpencil.guru"
-    OPENAI_API_KEY: Optional[str] = None
 
     # Application
     APP_ENV: str = "development"
