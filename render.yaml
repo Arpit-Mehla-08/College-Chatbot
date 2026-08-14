@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: college-chatbot-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # --- Database ---
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./mock.db
+
+      # --- Metabase (set these in the Render dashboard - not stored here) ---
+      - key: USE_METABASE
+        value: "true"
+      - key: METABASE_URL
+        sync: false
+      - key: METABASE_USERNAME
+        sync: false
+      - key: METABASE_PASSWORD
+        sync: false
+      - key: METABASE_DATABASE_ID
+        value: "2"
+
+      # --- LLM provider (set the key in the Render dashboard) ---
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false
+
+      # --- Application ---
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: QUERY_LOG_FILE
+        value: query_logs.json
+      - key: WEEK_DEFINITION
+        value: calendar
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "10"
+      - key: QUERY_TIMEOUT_SECONDS
+        value: "10"

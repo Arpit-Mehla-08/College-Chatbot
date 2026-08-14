@@ -1,0 +1,205 @@
+# Cached schema reference for PW IOI Database
+# This file stores frequently needed values so the LLM can match correctly.
+# Update this when the database structure or key values change.
+
+# All centers (exact names as stored in DB)
+centers:
+  - IOI Bengaluru
+  - IOI Delhi
+  - IOI Indore
+  - IOI Lucknow
+  - IOI Noida
+  - IOI Patna
+  - IOI Pune
+  - PW Skills Bangalore
+  - PW Skills Chandigarh
+  - PW Skills Chennai
+  - PW Skills Gurugram
+  - PW Skills Indore
+  - PW Skills Jammu Pacific Tower
+  - PW Skills Janakpuri & Ranchi
+  - PW Skills Kanpur
+  - PW Skills Lucknow
+  - PW Skills Ludhiana
+  - PW Skills Noida
+  - PW Skills Patna
+  - PW Skills Pune
+  - PW Skills Yamuna vihar
+
+# Common aliases users might say → actual DB value
+center_aliases:
+  bangalore: "IOI Bengaluru"
+  bengaluru: "IOI Bengaluru"
+  delhi: "IOI Delhi"
+  noida: "IOI Noida"
+  pune: "IOI Pune"
+  patna: "IOI Patna"
+  lucknow: "IOI Lucknow"
+  indore: "IOI Indore"
+  pw bangalore: "PW Skills Bangalore"
+  pw noida: "PW Skills Noida"
+  pw lucknow: "PW Skills Lucknow"
+  pw patna: "PW Skills Patna"
+  sot bangalore: "IOI Bengaluru"
+  sot noida: "IOI Noida"
+
+# Batch naming convention
+batches:
+  format: "Numbers like '23', '24', '25' for year-based batches, or full course names"
+  examples:
+    - "23"
+    - "24"
+    - "25"
+    - "CERTIFICATION COURSE IN DATA ANALYTICS WITH GEN AI - PREMIUM | OF_PWC_15FEB26"
+
+# Enum values (exact as stored)
+enums:
+  attendance_status:
+    - PRESENT
+    - ABSENT
+    - LATE
+  attendance_marked_by:
+    - MANUAL
+    - SCAN
+  gender:
+    - MALE
+    - FEMALE
+  problem_difficulty:
+    - EASY
+    - MEDIUM
+    - HARD
+  exam_type:
+    - MIDTERM
+    - ENDTERM
+    - QUIZ
+    - ASSIGNMENT
+  job_type:
+    - INTERNSHIP
+    - FULL_TIME
+  work_mode:
+    - REMOTE
+    - ONSITE
+    - HYBRID
+
+# Table quoting rules for PostgreSQL
+table_quoting:
+  needs_quotes:
+    - Student
+    - Center
+    - Batch
+    - Attendance
+    - Class
+    - Subject
+    - Exam
+    - StudentExamMarks
+    - Placement
+    - Club
+    - ClubMember
+    - ClubCenter
+    - Division
+    - Semester
+    - Cohort
+    - Project
+    - Certification
+    - Scan
+    - ScanWindow
+    - Teacher
+  no_quotes_needed:
+    - problem
+    - submission
+    - contest
+    - contest_problem
+    - tag
+    - programming_language
+
+# Key columns per table (most frequently queried)
+key_columns:
+  Student:
+    - id
+    - name
+    - email
+    - phone
+    - gender
+    - is_active
+    - enrollment_id
+    - center_id
+    - batch_id
+    - division_id
+    - joining_date
+  Center:
+    - id
+    - name
+    - location
+    - code
+  Batch:
+    - id
+    - name
+    - center_id
+  Attendance:
+    - id
+    - student_id
+    - class_id
+    - status
+    - created_at
+  Class:
+    - id
+    - subject_id
+    - division_id
+    - teacher_id
+    - start_date
+    - end_date
+  Exam:
+    - id
+    - name
+    - full_marks
+    - passing_marks
+    - exam_type
+    - exam_date
+    - subject_id
+  StudentExamMarks:
+    - id
+    - student_id
+    - exam_id
+    - subject_id
+    - marks_obtained
+    - is_present
+  Placement:
+    - id
+    - student_id
+    - company_name
+    - role
+    - job_type
+    - work_mode
+    - start_date
+  submission:
+    - id
+    - student_id
+    - problem_id
+    - contest_id
+    - status
+    - score
+    - submitted_at
+  problem:
+    - id
+    - title
+    - difficulty
+    - is_active
+
+# Common query patterns
+common_queries:
+  student_count_by_center: |
+    SELECT c.name as center_name, COUNT(s.id) as student_count
+    FROM "Student" s JOIN "Center" c ON s.center_id = c.id
+    WHERE s.is_active = true GROUP BY c.name ORDER BY student_count DESC
+  find_student_by_name: |
+    SELECT s.name, s.email, s.phone, c.name as center, b.name as batch
+    FROM "Student" s
+    JOIN "Center" c ON s.center_id = c.id
+    JOIN "Batch" b ON s.batch_id = b.id
+    WHERE s.name ILIKE '%NAME%'
+  attendance_percentage: |
+    SELECT s.name,
+      COUNT(CASE WHEN a.status = 'PRESENT' THEN 1 END) * 100.0 / COUNT(*) as attendance_pct
+    FROM "Attendance" a
+    JOIN "Student" s ON a.student_id = s.id
+    GROUP BY s.name

@@ -1,0 +1,185 @@
+# Complete database relationship graph (from Prisma schema via Metabase metadata)
+# 116 FK relationships - tells the LLM exactly how to JOIN tables
+# Format: "SourceTable".column -> "TargetTable".column
+
+# Student relationships (core entity)
+student_joins:
+  - '"Student".center_id -> "Center".id'
+  - '"Student".school_id -> "School".id'
+  - '"Student".batch_id -> "Batch".id'
+  - '"Student".semester_id -> "Semester".id'
+  - '"Student".division_id -> "Division".id'
+  - '"Student".cohort_id -> "Cohort".id'
+  - '"Student".degree_id -> "ExternalDegree".id'
+
+# Attendance & Class
+attendance_joins:
+  - '"Attendance".student_id -> "Student".id'
+  - '"Attendance".class_id -> "Class".id'
+  - '"Class".subject_id -> "Subject".id'
+  - '"Class".division_id -> "Division".id'
+  - '"Class".teacher_id -> "Teacher".id'
+  - '"Class".room_id -> "Room".id'
+  - '"Scan".student_id -> "Student".id'
+  - '"Scan".class_id -> "Class".id'
+  - '"Scan".detected_beacon_id -> "Beacon".id'
+  - '"Scan".scan_window_id -> "ScanWindow".id'
+  - '"ScanWindow".student_id -> "Student".id'
+  - '"ScanWindow".class_id -> "Class".id'
+
+# Academics
+academics_joins:
+  - '"Exam".subject_id -> "Subject".id'
+  - '"StudentExamMarks".student_id -> "Student".id'
+  - '"StudentExamMarks".subject_id -> "Subject".id'
+  - '"StudentExamMarks".exam_id -> "Exam".id'
+  - '"StudentExamMarks".graded_by -> "Teacher".id'
+  - '"Subject".semester_id -> "Semester".id'
+  - '"Subject".teacher_id -> "Teacher".id'
+  - '"Semester".division_id -> "Division".id'
+
+# Organization hierarchy
+organization_joins:
+  - '"Batch".center_id -> "Center".id'
+  - '"Batch".school_id -> "School".id'
+  - '"Division".center_id -> "Center".id'
+  - '"Division".school_id -> "School".id'
+  - '"Division".batch_id -> "Batch".id'
+  - '"Division".current_semester -> "Semester".id'
+  - '"Cohort".center_id -> "Center".id'
+  - '"Cohort".school_id -> "School".id'
+  - '"School".center_id -> "Center".id'
+  - '"Room".center_id -> "Center".id'
+  - '"Beacon".room_id -> "Room".id'
+
+# Coding platform
+coding_joins:
+  - '"submission".student_id -> "Student".id'
+  - '"submission".problem_id -> "problem".id'
+  - '"submission".contest_id -> "contest".id'
+  - '"submission".language_id -> "programming_language".id'
+  - '"submission_result".submission_id -> "submission".id'
+  - '"submission_result".test_case_id -> "test_case".id'
+  - '"test_case".problem_id -> "problem".id'
+  - '"contest".created_by -> "Teacher".id'
+  - '"contest".subject_id -> "Subject".id'
+  - '"contest_problem".contest_id -> "contest".id'
+  - '"contest_problem".problem_id -> "problem".id'
+  - '"contest_moderator".contest_id -> "contest".id'
+  - '"contest_moderator".moderator_id -> "Teacher".id'
+  - '"problem".created_by -> "Teacher".id'
+  - '"problem_language".problem_id -> "problem".id'
+  - '"problem_language".language_id -> "programming_language".id'
+  - '"problem_moderator".problem_id -> "problem".id'
+  - '"problem_moderator".moderator_id -> "Teacher".id'
+  - '"problem_tag".problem_id -> "problem".id'
+  - '"problem_tag".tag_id -> "tag".id'
+  - '"contest_tag".contest_id -> "contest".id'
+  - '"contest_tag".tag_id -> "tag".id'
+  - '"batch_contest".batch_id -> "Batch".id'
+  - '"batch_contest".contest_id -> "contest".id'
+  - '"allowed_language".language_id -> "programming_language".id'
+  - '"allowed_language".contest_id -> "contest".id'
+
+# Clubs
+club_joins:
+  - '"ClubCenter".club_id -> "Club".id'
+  - '"ClubCenter".center_id -> "Center".id'
+  - '"ClubCenter".leader_id -> "Student".id'
+  - '"ClubCenter".faculty_id -> "Teacher".id'
+  - '"ClubMember".club_center_id -> "ClubCenter".id'
+  - '"ClubMember".student_id -> "Student".id'
+  - '"ClubEvent".club_id -> "Club".id'
+  - '"ClubEvent".event_id -> "Event".id'
+  - '"ClubGallery".club_id -> "Club".id'
+
+# Placements & Projects
+career_joins:
+  - '"Placement".student_id -> "Student".id'
+  - '"Project".student_id -> "Student".id'
+  - '"Certification".student_id -> "Student".id'
+  - '"Achievement".student_id -> "Student".id'
+  - '"StudentShowcase".student_id -> "Student".id'
+  - '"ProjectMetric".project_id -> "ShowcaseProject".id'
+  - '"AcademicHistory".student_id -> "Student".id'
+  - '"PersonalDetail".student_id -> "Student".id'
+  - '"SocialLink".student_id -> "Student".id'
+
+# Admin & Teachers
+staff_joins:
+  - '"Admin".role_id -> "RoleAdmin".id'
+  - '"Admin".center_id -> "Center".id'
+  - '"Center".business_head -> "Admin".id'
+  - '"Center".academic_head -> "Admin".id'
+  - '"Teacher".center_id -> "Center".id'
+  - '"Teacher".supervising_teacher_id -> "Teacher".id'
+  - '"TeacherCohort".teacher_id -> "Teacher".id'
+  - '"TeacherCohort".cohort_id -> "Cohort".id'
+  - '"TeacherExperience".teacher_id -> "Teacher".id'
+  - '"TeacherSchool".teacher_id -> "Teacher".id'
+  - '"TeacherSchool".school_id -> "School".id'
+  - '"TeacherResearchPaper".teacher_id -> "Teacher".id'
+  - '"TeacherResearchPaper".research_paper_id -> "ResearchPaper".id'
+  - '"TeacherAcademicHistory".teacher_id -> "Teacher".id'
+
+# Other
+other_joins:
+  - '"Behaviour".admin_id -> "Admin".id'
+  - '"Behaviour".student_id -> "Student".id'
+  - '"StudentLog".student_id -> "Student".id'
+  - '"Comment".post_id -> "Post".id'
+  - '"Flag".post_id -> "Post".id'
+  - '"PostMedia".post_id -> "Post".id'
+  - '"Policy".center_id -> "Center".id'
+  - '"CprModule".subject_id -> "Subject".id'
+  - '"CprTopic".module_id -> "CprModule".id'
+  - '"CprSubTopic".topic_id -> "CprTopic".id'
+  - '"WindowScanMapping".scan_window_id -> "ScanWindow".id'
+  - '"WindowScanMapping".scan_id -> "Scan".id'
+
+# Common JOIN paths (for the LLM to reference)
+# These are the most frequently needed multi-table paths:
+common_paths:
+  student_with_center_and_batch: |
+    "Student" S
+    JOIN "Batch" B ON S.batch_id = B.id
+    JOIN "Center" C ON S.center_id = C.id
+  
+  student_attendance_with_class: |
+    "Attendance" A
+    JOIN "Student" S ON A.student_id = S.id
+    JOIN "Class" Cl ON A.class_id = Cl.id
+  
+  student_exam_marks: |
+    "StudentExamMarks" SEM
+    JOIN "Student" S ON SEM.student_id = S.id
+    JOIN "Exam" E ON SEM.exam_id = E.id
+    JOIN "Subject" Sub ON SEM.subject_id = Sub.id
+  
+  student_semester: |
+    "Student" S
+    JOIN "Semester" Sm ON S.semester_id = Sm.id
+  
+  student_nth_semester: |
+    "Student" S
+    JOIN "Division" D ON S.division_id = D.id
+    JOIN "Semester" Sm ON Sm.division_id = D.id AND Sm.number = N
+  
+  attendance_in_semester: |
+    "Attendance" A
+    JOIN "Student" S ON A.student_id = S.id
+    JOIN "Class" Cl ON A.class_id = Cl.id
+    JOIN "Semester" Sm ON Sm.division_id = S.division_id AND Sm.number = N
+    WHERE Cl.start_date >= Sm.start_date AND (Sm.end_date IS NULL OR Cl.start_date <= Sm.end_date)
+  
+  student_submissions: |
+    submission sub
+    JOIN "Student" S ON sub.student_id = S.id
+    JOIN problem p ON sub.problem_id = p.id
+  
+  club_members_with_center: |
+    "ClubMember" CM
+    JOIN "ClubCenter" CC ON CM.club_center_id = CC.id
+    JOIN "Club" Cl ON CC.club_id = Cl.id
+    JOIN "Center" C ON CC.center_id = C.id
+    JOIN "Student" S ON CM.student_id = S.id

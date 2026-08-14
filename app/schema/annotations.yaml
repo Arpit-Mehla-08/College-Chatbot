@@ -1,0 +1,266 @@
+# Curated schema annotations for PW IOI College Database (PostgreSQL)
+# Organized by domain for selective context loading
+
+domains:
+  attendance:
+    description: "Student attendance tracking"
+    tables:
+      - Attendance
+      - Student
+      - Class
+      - Center
+      - Batch
+      - Division
+      - School
+      - Subject
+      - Semester
+      - Teacher
+    notes:
+      - "ALLOWED TABLES ONLY: Attendance, Student, Class, Center, Batch, Division, School, Subject, Semester, Teacher"
+      - "Use the Attendance table for attendance queries"
+      - "Attendance.status is an enum: 'PRESENT', 'ABSENT', 'LATE'"
+      - "Attendance.marked_by shows how it was marked: 'MANUAL', 'SCAN', etc."
+      - "To calculate attendance %: COUNT(PRESENT) * 100.0 / COUNT(*)"
+      - "MANDATORY FILTERS: is_active=true AND email NOT LIKE '%dummyemail%' for students"
+      - "MANDATORY FILTERS: name NOT LIKE '%PW Skills%' AND name != 'TEST Center' for centers"
+
+  academics:
+    description: "Subjects, semesters, and class scheduling"
+    tables:
+      - Subject
+      - Student
+      - Semester
+      - Division
+      - Batch
+      - Center
+      - Class
+      - Teacher
+      - School
+      - Attendance
+    notes:
+      - "ALLOWED TABLES ONLY: Subject, Student, Semester, Division, Batch, Center, Class, Teacher, School, Attendance"
+      - "Subject belongs to a Semester"
+      - "Class schedules subject teaching by teacher"
+      - "MANDATORY FILTERS: is_active=true AND email NOT LIKE '%dummyemail%' for students"
+      - "MANDATORY FILTERS: name NOT LIKE '%PW Skills%' AND name != 'TEST Center' for centers"
+
+  coding:
+    description: "This domain is NOT SUPPORTED - outside 10-table scope"
+    tables: []
+    notes:
+      - "Coding-related queries are not supported in this phase"
+      - "Only queries using: Teacher, Center, Batch, School, Subject, Semester, Division, Class, Attendance, Student"
+
+  clubs:
+    description: "This domain is NOT SUPPORTED - outside 10-table scope"
+    tables: []
+    notes:
+      - "Club-related queries are not supported in this phase"
+      - "Only queries using: Teacher, Center, Batch, School, Subject, Semester, Division, Class, Attendance, Student"
+
+  placements:
+    description: "This domain is NOT SUPPORTED - outside 10-table scope"
+    tables: []
+    notes:
+      - "Placement-related queries are not supported in this phase"
+      - "Only queries using: Teacher, Center, Batch, School, Subject, Semester, Division, Class, Attendance, Student"
+
+  students:
+    description: "Student demographics and enrollment"
+    tables:
+      - Student
+      - Batch
+      - Center
+      - Division
+      - School
+      - Semester
+      - Teacher
+      - Class
+      - Attendance
+    notes:
+      - "ALLOWED TABLES ONLY: Student, Batch, Center, Division, School, Semester, Teacher, Class, Attendance"
+      - "Student.is_active=true means currently enrolled"
+      - "Student hierarchy: Center -> Batch -> Division -> Student"
+      - "enrollment_id is the student's enrollment number"
+      - "joining_date is when the student joined"
+      - "gender is an enum: 'MALE', 'FEMALE'"
+      - "MANDATORY FILTERS: is_active=true AND email NOT LIKE '%dummyemail%' for students"
+      - "MANDATORY FILTERS: name NOT LIKE '%PW Skills%' AND name != 'TEST Center' for centers"
+
+  projects:
+    description: "This domain is NOT SUPPORTED - outside 10-table scope"
+    tables: []
+    notes:
+      - "Project-related queries are not supported in this phase"
+      - "Only queries using: Teacher, Center, Batch, School, Subject, Semester, Division, Class, Attendance, Student"
+
+  certifications:
+    description: "This domain is NOT SUPPORTED - outside 10-table scope"
+    tables: []
+    notes:
+      - "Certification-related queries are not supported in this phase"
+      - "Only queries using: Teacher, Center, Batch, School, Subject, Semester, Division, Class, Attendance, Student"
+
+  general:
+    description: "General/cross-domain queries using allowed tables"
+    tables:
+      - Teacher
+      - Center
+      - Batch
+      - School
+      - Subject
+      - Semester
+      - Division
+      - Class
+      - Attendance
+      - Student
+    notes:
+      - "ALLOWED TABLES ONLY: Teacher, Center, Batch, School, Subject, Semester, Division, Class, Attendance, Student"
+      - "All queries must use ONLY these 10 tables"
+      - "NO other tables are permitted"
+      - "MANDATORY FILTERS must always be applied"
+
+# Table-level annotations (ONLY 10 ALLOWED TABLES)
+tables:
+  Student:
+    description: "Core student table with enrollment and organizational info"
+    columns:
+      id: "Primary key (UUID text)"
+      name: "Full name"
+      email: "Email address - FILTER: NOT LIKE '%dummyemail%'"
+      gender: "Enum: MALE, FEMALE"
+      phone: "Phone number"
+      is_active: "FILTER: true=currently enrolled, false=dropped/graduated. ALWAYS filter: = true"
+      enrollment_id: "Enrollment/roll number"
+      center_id: "FK to Center"
+      batch_id: "FK to Batch"
+      division_id: "FK to Division"
+      semester_id: "FK to Semester"
+      joining_date: "When the student joined"
+      created_at: "Record creation timestamp"
+
+  Center:
+    description: "Physical campus/center locations"
+    columns:
+      id: "Primary key (UUID)"
+      name: "Center name - FILTER: NOT LIKE '%PW Skills%' AND != 'TEST Center'"
+      location: "City/address"
+      code: "Numeric center code"
+
+  Batch:
+    description: "Student batch/cohort within a center (e.g., Batch 23, Batch 24)"
+    columns:
+      id: "Primary key (UUID)"
+      name: "Batch name (e.g., '23', '24', '25')"
+      center_id: "FK to Center"
+      school_id: "FK to School"
+
+  School:
+    description: "Schools/programs within centers"
+    columns:
+      id: "Primary key (UUID)"
+      name: "School name (e.g., 'SOT', 'SOM')"
+      center_id: "FK to Center"
+
+  Division:
+    description: "Division within a batch (like a section or group)"
+    columns:
+      id: "Primary key (UUID)"
+      code: "Division code (e.g., 'A', 'B', 'C')"
+      center_id: "FK to Center"
+      batch_id: "FK to Batch"
+      school_id: "FK to School"
+      current_semester: "Current semester ID"
+      start_date: "When division starts"
+      end_date: "When division ends (optional)"
+
+  Semester:
+    description: "Academic periods (1st semester, 2nd semester, etc.)"
+    columns:
+      id: "Primary key (UUID)"
+      number: "Semester number (1, 2, 3, ...)"
+      division_id: "FK to Division"
+      start_date: "Semester start date"
+      end_date: "Semester end date (optional)"
+
+  Subject:
+    description: "Academic subjects/courses taught in a semester"
+    columns:
+      id: "Primary key (UUID)"
+      name: "Subject name"
+      semester_id: "FK to Semester"
+      credits: "Credit hours"
+      code: "Subject code"
+      teacher_id: "FK to Teacher"
+
+  Class:
+    description: "Scheduled class/lecture sessions"
+    columns:
+      id: "Primary key (UUID)"
+      lecture_number: "Lecture sequence number"
+      subject_id: "FK to Subject"
+      division_id: "FK to Division"
+      teacher_id: "FK to Teacher"
+      start_date: "Class start datetime"
+      end_date: "Class end datetime"
+
+  Attendance:
+    description: "Daily attendance record per student per class"
+    columns:
+      id: "Primary key (UUID)"
+      student_id: "FK to Student"
+      class_id: "FK to Class"
+      status: "Enum: PRESENT, ABSENT, LATE"
+      successful_scan_count: "Number of successful beacon scans"
+      marked_by: "How attendance was marked: MANUAL, SCAN"
+      created_at: "When this record was created"
+
+  Teacher:
+    description: "Faculty members and instructors"
+    columns:
+      id: "Primary key (UUID)"
+      name: "Teacher full name"
+      email: "Email address"
+      phone: "Phone number"
+      role: "Role (e.g., TEACHER)"
+      gender: "Gender: MALE, FEMALE (optional)"
+      designation: "Job title (optional)"
+      center_id: "FK to Center"
+      is_active: "true = currently employed, false = former teacher"
+      created_at: "Record creation timestamp"
+
+# REMOVED: The following tables are NOT in scope for this phase:
+# ClubCenter, Placement, Project, Certification, Club, ClubMember
+# Exam, StudentExamMarks, problem, submission, contest
+
+# Common relationships for JOINs
+relationships:
+  - "Student.center_id -> Center.id"
+  - "Student.batch_id -> Batch.id"
+  - "Student.division_id -> Division.id"
+  - "Student.semester_id -> Semester.id"
+  - "Batch.center_id -> Center.id"
+  - "Batch.school_id -> School.id"
+  - "Division.batch_id -> Batch.id"
+  - "Division.center_id -> Center.id"
+  - "Division.school_id -> School.id"
+  - "Class.subject_id -> Subject.id"
+  - "Class.division_id -> Division.id"
+  - "Class.teacher_id -> Teacher.id"
+  - "Attendance.student_id -> Student.id"
+  - "Attendance.class_id -> Class.id"
+  - "Subject.semester_id -> Semester.id"
+  - "Subject.teacher_id -> Teacher.id"
+  - "Semester.division_id -> Division.id"
+  - "Teacher.center_id -> Center.id"
+  - "School.center_id -> Center.id"
+
+
+# Columns to EXCLUDE from schema context (sensitive data)
+excluded_columns:
+  - "googleId"
+  - "googleAccessToken"
+  - "googleRefreshToken"
+  - "googleTokenExpiry"
+  - "device_id"
+  - "code"
